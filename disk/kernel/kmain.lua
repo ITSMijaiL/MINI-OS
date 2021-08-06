@@ -1,5 +1,7 @@
-local Kernel={}
+--TODO: do the custom environment and then run programs using it.
 
+_G.Kernel={}
+local Kernel = _G.Kernel
 local pm = require("processmanager")
 
 Kernel.pmanager = pm.ProcessManager:new()
@@ -8,6 +10,12 @@ Kernel.shutdown = function()
   for i,v in pairs(Kernel.pmanager:getprocs()) do
     v:Kill()
   end
+end
+
+Kernel.environment = {}
+
+Kernel.fixPath = function (path)
+    return fs.combine("/disk/rootfs",path)
 end
 
 Kernel.syscall = function(proc,number,...)
@@ -39,10 +47,18 @@ Kernel.syscall = function(proc,number,...)
       os.shutdown()
   elseif number==6 then --REBOOT []
       os.reboot()
+  elseif number==7 then --CREATE PROCESS [variable used to store the process' class,PID (int),job (function)]
+      CheckArgs(3)
+      args[1]=pm.Process:new(nil,args[2],Kernel.pmanager,args[3])
+  elseif number==8 then --INIT PROCESS [process var, args]
+    local argsfix = {}
+    for i,v in pairs(args) do if i~=1 then table.insert(argsfix,v) end end
+    Kernel.pmanager:addproc(args[1])
+    Kernel.pmanager:startproc(args[1].pid,table.unpack(argsfix))
   end
 end
 
-function kmain(...)
+function Kernel.kmain(...)
   local args = {...}
-  Kernel.pmanager:addproc(pm.Process:new(nil, 1, Kernel.pmanager,function() os.run({},"") end))
+  Kernel.pmanager:addproc(pm.Process:new(nil, 1, Kernel.pmanager,function() dofile(Kernel.fixPath("INIT.lua")) end))
 end 
