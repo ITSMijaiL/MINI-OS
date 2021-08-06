@@ -35,6 +35,7 @@ function Process:new(o,pid,pmanager,job)
     self.pstatus = 0
     self.name = nil
     self.job = coroutine.create(job)
+    self.locals = {}
     return o
 end
 
@@ -53,7 +54,7 @@ function Process:Start(...)
 end
 
 function Process:Kill()
-    self.pmanager:killproc(self.PID)
+    self.pmanager:killproc(self.pid)
 end
 
 function Process:Stop()
@@ -61,11 +62,6 @@ function Process:Stop()
   self.pstatus=0
   coroutine.yield(self.job)
 end
---[[
-function StartProcess(p)
-    if processes[p.PID] ~= nil then return end
-
-end]]
 
 local ProcessManager = {}
 
