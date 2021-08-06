@@ -1,8 +1,4 @@
 
-local syscallm = require("kernel.syscallmanager")
-
-
-
 local Process={pid=0,pmanager=nil}
 
 --[[
@@ -46,19 +42,28 @@ end
 function Process:SetName(name) self.name = name end
 function Process:GetName() return self.name end
 
+function Process:UpdateStatus() self.pstatus = CStatusToPStatus(coroutine.status(self.job)) end
+
 function Process:Start(...)
-  assert(not (self.pstatus ~= 0),"Process status must be 0.")
-  self.pstatus = CStatusToPStatus(coroutine.status(self.job))
+  assert(not (self.pstatus ~= 0) and not (self.pstatus~=2),"Process status must be 0 or 2.")
+  self:UpdateStatus()
   coroutine.resume(self.job,...)
-  self.pstatus = CStatusToPStatus(coroutine.status(self.job))
+  self:UpdateStatus()
 end
 
 function Process:Kill()
+    self:UpdateStatus()
+    if self.pstatus~=2 and self.pstatus~=0 then return end
     self.pmanager:killproc(self.pid)
 end
 
+function Process:ForceKill()
+  self:Stop()
+  self.pmanager:killproc(self.pid)
+end
+
 function Process:Stop()
-  assert(self.pstatus==1,"Process status must be 1.")
+  assert(self.pstatus==1,"Process status must be 1 or .")
   self.pstatus=0
   coroutine.yield(self.job)
 end
@@ -77,6 +82,13 @@ end
 function ProcessManager:procexists(pid)
   return self.processes[pid]~=nil
 end
+
+function ProcessManager:getproc(pid)
+  if self.processes[pid]==nil then return end
+  return self.processes[pid]
+end
+
+function ProcessManager:getprocs() return self.processes end
 
 function ProcessManager:addproc(proc)
   if self.processes[proc.pid]~=nil then return end
