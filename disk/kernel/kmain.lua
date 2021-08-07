@@ -1,4 +1,4 @@
---TODO: do the custom environment and then run programs using it.
+--TODO: each time a program runs, it has to be prepared first and for that, lib files will be ran with dofile.
 
 _G.Kernel={}
 local Kernel = _G.Kernel
@@ -15,6 +15,7 @@ end
 Kernel.environment = {}
 
 Kernel.fixPath = function (path)
+    if path == nil or path=="" then return "" end
     return fs.combine("/disk/rootfs",path)
 end
 
