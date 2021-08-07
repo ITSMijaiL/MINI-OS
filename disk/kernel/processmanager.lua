@@ -32,11 +32,25 @@ function Process:new(o,pid,pmanager,job)
     self.name = nil
     self.job = coroutine.create(job)
     self.locals = {}
+    self.children = {}
     return o
 end
 
 function Process:GetStatus()
   return self.pstatus
+end
+
+function Process:GetChildrenProcesses() return self.children end 
+
+function Process:AddChildrenProcess(proc) 
+  --assert(self.children[proc.pid]==nil,"Children process already exists!")
+  if self.children[proc.pid]~=nil then return end
+  self.children[proc.pid]=proc
+end
+
+function Process:StartChildrenProcess(pid,...)
+  if self.children[pid]==nil then return end
+  self.children[pid]:Start(...)
 end
 
 function Process:SetName(name) self.name = name end

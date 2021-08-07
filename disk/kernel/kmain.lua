@@ -12,7 +12,10 @@ Kernel.shutdown = function()
   end
 end
 
-Kernel.environment = {}
+Kernel.process = pm.Process:new(nil,0,Kernel.pmanager,function () end) --Kernel's pseudo-process
+Kernel.pmanager:addproc(Kernel.process)
+
+--Kernel.environment = {}
 
 Kernel.fixPath = function (path)
     if path == nil or path=="" then return "" end
@@ -59,7 +62,14 @@ Kernel.syscall = function(proc,number,...)
   end
 end
 
+function Kernel.exec(path,env,...) 
+local args = {...}
+local proc;
+Kernel.syscall(Kernel.process,7,proc,#Kernel.pmanager:getprocs(),function (...) return dofile(path)(...) end)
+Kernel.syscall(Kernel.process,8,proc,...)
+end
+
 function Kernel.kmain(...)
   local args = {...}
-  Kernel.pmanager:addproc(pm.Process:new(nil, 1, Kernel.pmanager,function() dofile(Kernel.fixPath("INIT.lua")) end))
+  --Kernel.pmanager:addproc(pm.Process:new(nil, 1, Kernel.pmanager,function() dofile(Kernel.fixPath("INIT.lua")) end))
 end 
