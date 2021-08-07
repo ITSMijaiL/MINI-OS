@@ -62,11 +62,13 @@ Kernel.syscall = function(proc,number,...)
   end
 end
 
-function Kernel.exec(path,env,...) 
+function Kernel.execprogram(path,env,...) 
 local args = {...}
 local proc;
-Kernel.syscall(Kernel.process,7,proc,#Kernel.pmanager:getprocs(),function (...) return dofile(path)(...) end)
-Kernel.syscall(Kernel.process,8,proc,...)
+local func = function (...) return dofile(path)(...) end
+setfenv(func,env)
+Kernel.syscall(Kernel.process,7,proc,#Kernel.pmanager:getprocs(),func) --create process, store it in variable proc
+Kernel.syscall(Kernel.process,8,proc,...) --start the process
 end
 
 function Kernel.kmain(...)
