@@ -1,3 +1,4 @@
+clear()
 --local kernel = require("kernel.kmain")
 
 print("INITIALIZING KERNEL...")

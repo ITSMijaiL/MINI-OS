@@ -15,7 +15,26 @@ end
 Kernel.process = pm.Process:new(nil,0,Kernel.pmanager,function () end) --Kernel's pseudo-process
 Kernel.pmanager:addproc(Kernel.process)
 
---Kernel.environment = {}
+local blacklistedfuncs = {"getmetatable","setmetatable","rawget","rawequal","rawset","setfenv",""}
+
+Kernel.environment = setmetatable(
+{
+    _G = {}, 
+    --based on lua 5.1's coroutine lib since CC:tweaked and perhaps even the original computercraft runs lua 5.1
+    coroutine = {create = coroutine.create, 
+    yield = coroutine.yield, resume = coroutine.resume,
+    running = coroutine.running, status = coroutine.status
+    },
+
+},{
+    __index = function(t,k)
+        if rawget(t,k) ~= nil and blacklistedfuncs[k] == nil then
+            return rawget(t,k) --rawget to not loop over __index and fill the c stack
+        elseif not rawget(t,k) ~= nil and blacklistedfuncs[k] == nil then
+            return _G[k]
+        end
+    end
+})
 
 Kernel.fixPath = function (path)
     if path == nil or path=="" then return "" end
@@ -62,11 +81,12 @@ Kernel.syscall = function(proc,number,...)
   end
 end
 
-function Kernel.execprogram(path,env,...) 
+function Kernel.execprogram(path,...) 
 local args = {...}
 local proc;
-local func = function (...) return dofile(path)(...) end
-setfenv(func,env)
+local func,out = loadfile(Kernel.fixPath(path))
+if not func then return out end
+setfenv(func,Kernel.environment)
 Kernel.syscall(Kernel.process,7,proc,#Kernel.pmanager:getprocs(),func) --create process, store it in variable proc
 Kernel.syscall(Kernel.process,8,proc,...) --start the process
 end
