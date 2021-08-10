@@ -68,7 +68,8 @@ Kernel.environment = setmetatable(
     
     proc = nil,
 
-    exit = function() Kernel.syscall(proc,0) end
+    exit = function() Kernel.syscall(proc,0) end,
+    sleep = sleep
 
 },{
     __index = function(t,k)
