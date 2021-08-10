@@ -152,14 +152,14 @@ end
 function Kernel.execprogram(path,...) 
 --local args = {...}
 local proc;
-local func,out = dofile(Kernel.fixPath(path))
+local func,out = loadfile(Kernel.fixPath(path))
 if not func then return out end
 local env_copy = {}
 for i,v in pairs(Kernel.environment) do
     env_copy[i] = v
 end
 setfenv(func,env_copy)
-proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs(),func) --create process, store it in variable proc
+proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs(),pcall(func)()) --create process, store it in variable proc
 Kernel.syscall(Kernel.process,8,proc,...) --start the process
 end
 
