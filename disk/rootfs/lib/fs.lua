@@ -1,6 +1,6 @@
 local oldfs = fs
-_G.fs = {}
-local fs = _G.fs
+--_G.fs = {}
+local fs = {}
 
 assert(_G.Kernel~=nil,"[LIB ERROR] Kernel's object is non-existent!")
 
@@ -83,3 +83,5 @@ end
 fs.attributes = function(path)
     return oldfs.attributes(_G.Kernel.fixPath(path))
 end
+
+return fs

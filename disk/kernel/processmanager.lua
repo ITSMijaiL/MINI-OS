@@ -118,3 +118,5 @@ function ProcessManager:killproc(pid)
   if self.processes[pid]==nil then return end
   self.processes[pid]=nil
 end
+
+return {ProcessManager=ProcessManager,Process=Process}
