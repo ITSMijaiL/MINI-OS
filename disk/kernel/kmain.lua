@@ -124,8 +124,8 @@ Kernel.syscall = function(proc,number,...)
   elseif number==8 then --INIT PROCESS [process var, args]
     local argsfix = {}
     for i,v in pairs(args) do if i~=1 then table.insert(argsfix,v) end end
-    Kernel.pmanager:addproctoqueue(args[1])
-    --Kernel.pmanager:startproc(args[1].pid,table.unpack(argsfix))
+    Kernel.pmanager:addproc(args[1])
+    Kernel.pmanager:startproc(args[1].pid,table.unpack(argsfix))
   end
 end
 
@@ -145,7 +145,7 @@ end
 
 function Kernel.kmain(...)
   local args = {...}
-  Kernel.pmanager:init_loop()
+  --Kernel.pmanager:init_loop()
   Kernel.execprogram("/INIT.lua")
   --Kernel.pmanager:addproc(pm.Process:new(nil, 1, Kernel.pmanager,function() dofile(Kernel.fixPath("INIT.lua")) end))
 end 
