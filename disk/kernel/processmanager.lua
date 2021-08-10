@@ -25,7 +25,7 @@ function Process:new(o,pid,pmanager,job)
     self.pmanager=pmanager
     self.pstatus = 0
     self.name = nil
-    self.job = coroutine.create(job)
+    self.job = coroutine.create(job())
     self.locals = {}
     self.children = {}
     return o
