@@ -3,7 +3,7 @@
 _G.Kernel={}
 local Kernel = _G.Kernel
 --require = require("cc.require")
-local pm = dofile("processmanager")()
+local pm = dofile("processmanager.lua")
 
 Kernel.pmanager = pm.ProcessManager:new()
 
@@ -58,6 +58,12 @@ Kernel.environment = setmetatable(
     os = os,
 
     debug = nil,
+
+    syscall = Kernel.syscall,
+    
+    execprogram = Kernel.execprogram,
+
+    parallel = parallel,
 
 },{
     __index = function(t,k)

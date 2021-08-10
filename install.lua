@@ -62,6 +62,9 @@ if string.lower(yn)=="yes" or string.lower(yn)=="y" then
         f:close()
         r.close()
     end
+    write("Doing final tweaks...")
+    fs.move("/disk/startup.lua","/disk/startup")
+    write("DONE\n")
     print("Do you want to reboot now?")
     write("Y/N:")
     local yn = io.read()
