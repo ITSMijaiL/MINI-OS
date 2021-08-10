@@ -40,12 +40,14 @@ function Process:GetStatus()
   return self.pstatus
 end
 
+function Process:GetPID() return self.pid end
+
 function Process:GetChildrenProcesses() return self.children end 
 
 function Process:AddChildrenProcess(proc) 
   --assert(self.children[proc.pid]==nil,"Children process already exists!")
-  if self.children[proc.pid]~=nil then return end
-  self.children[proc.pid]=proc
+  if self.children[proc:GetPID()]~=nil then return end
+  self.children[proc:GetPID()]=proc
 end
 
 function Process:StartChildrenProcess(pid,...)
@@ -105,12 +107,12 @@ end
 function ProcessManager:getprocs() return self.processes end
 
 function ProcessManager:addproc(proc)
-  if self.processes[proc.pid]~=nil then return end
-  self.processes[proc.pid]=proc
+  if self.processes[proc:GetPID()]~=nil then return end
+  self.processes[proc:GetPID()]=proc
 end
 
 function ProcessManager:addproctoqueue(proc,...)
-  if self.processes[proc.pid]~=nil then return end
+  if self.processes[proc:GetPID()]~=nil then return end
   table.insert(self.processRunQueue,{proc=proc,args=...})
 end
 

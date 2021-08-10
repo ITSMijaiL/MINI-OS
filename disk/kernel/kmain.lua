@@ -121,8 +121,8 @@ Kernel.syscall = function(proc,number,...)
   elseif number==6 then --REBOOT []
       os.reboot()
   elseif number==7 then --CREATE PROCESS [variable used to store the process' class,PID (int),job (function)]
-      CheckArgs(3)
-      args[1]=pm.Process:new(nil,args[2],Kernel.pmanager,args[3])
+      CheckArgs(2)
+      return pm.Process:new(nil,args[1],Kernel.pmanager,args[2])
   elseif number==8 then --INIT PROCESS [process var, args]
     local argsfix = {}
     for i,v in pairs(args) do if i~=1 then table.insert(argsfix,v) end end
@@ -141,7 +141,7 @@ for i,v in pairs(Kernel.environment) do
     env_copy[i] = v
 end
 setfenv(func,env_copy)
-Kernel.syscall(Kernel.process,7,proc,#Kernel.pmanager:getprocs(),func) --create process, store it in variable proc
+proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs(),func) --create process, store it in variable proc
 Kernel.syscall(Kernel.process,8,proc,...) --start the process
 end
 
