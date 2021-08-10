@@ -1,4 +1,4 @@
-return function(...)
+return function()
       print("test :)")
       exit()
 end
