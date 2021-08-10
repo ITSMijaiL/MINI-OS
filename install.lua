@@ -13,8 +13,12 @@ end
 
 if string.lower(yn)=="yes" or string.lower(yn)=="y" then
     print("You've been warned, as of right now this is unstable and untested")
+    if not fs.exists("/disk/") then 
+        print("/disk/ wasn't found, aborting...")
+    return exit()
+    end
     --TODO:make directories along with kernel, insert startup.lua, insert libs and insert services to be initiated in (disk/rootfs)/etc/on_init/
-    write("Building the root fileystem...")
+    write("Building the root filesystem...")
     local rfs = "/disk/rootfs"
     local rfs2=""
     fs.makeDir(rfs)

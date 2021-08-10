@@ -1,9 +1,7 @@
---TODO: each time a program runs, it has to be prepared first and for that, lib files will be ran with dofile.
-
 _G.Kernel={}
 local Kernel = _G.Kernel
 --require = require("cc.require")
-local pm = dofile("./processmanager.lua")
+local pm = dofile("/disk/kernel/processmanager.lua")
 
 Kernel.pmanager = pm.ProcessManager:new()
 
@@ -27,7 +25,7 @@ Kernel.environment = setmetatable(
     running = coroutine.running, status = coroutine.status
     },
 
-    fs = dofile("../rootfs/lib/fs.lua"),
+    fs = dofile("/disk/rootfs/lib/fs.lua"),
 
     math = {abs=math.abs,acos=math.acos,asin=math.asin,
     atan=math.atan,atan2=math.atan2,ceil=math.ceil,
@@ -53,7 +51,7 @@ Kernel.environment = setmetatable(
     maxn=table.maxn, remove=table.remove, sort=table.sort, 
     unpack = table.unpack},
 
-    io = dofile("../rootfs/lib/io.lua"),
+    io = dofile("/disk/rootfs/lib/io.lua"),
 
     os = os,
 
@@ -64,6 +62,13 @@ Kernel.environment = setmetatable(
     execprogram = Kernel.execprogram,
 
     parallel = parallel,
+
+    dofile = function(path) return dofile(_G.Kernel.fixPath(path)) end,
+    loadfile = function(path) return loadfile(_G.Kernel.fixPath(path)) end,
+    
+    proc = nil,
+
+    exit = function() Kernel.syscall(proc,0) end
 
 },{
     __index = function(t,k)
@@ -84,14 +89,16 @@ end
 
 Kernel.syscall = function(proc,number,...)
   local args = {...}
-  local function CheckArgs(argsAmnt) 
+  local function CheckArgs(argsAmnt)
+      if argsAmnt==0 then assert(args==nil,"System call #"..tostring(number).." needs "..tostring(argsAmnt).." arguments!") end
       assert(#args>=argsAmnt,"System call #"..tostring(number).." needs "..tostring(argsAmnt).." arguments!")
   end
   local function CheckArgsStrict(argsAmnt) 
+      if argsAmnt==0 then assert(args==nil,"System call #"..tostring(number).." needs exactly "..tostring(argsAmnt).." arguments!") end
       assert(#args==argsAmnt,"System call #"..tostring(number).." needs exactly "..tostring(argsAmnt).." arguments!")
   end
   if number==0 then --EXIT []
-      CheckArgsStrict(0)
+      CheckArgs(0)
       proc:kill()
   elseif number==1 then --OPEN [file path, mode]
       CheckArgs(2)
@@ -117,8 +124,8 @@ Kernel.syscall = function(proc,number,...)
   elseif number==8 then --INIT PROCESS [process var, args]
     local argsfix = {}
     for i,v in pairs(args) do if i~=1 then table.insert(argsfix,v) end end
-    Kernel.pmanager:addproc(args[1])
-    Kernel.pmanager:startproc(args[1].pid,table.unpack(argsfix))
+    Kernel.pmanager:addproctoqueue(args[1])
+    --Kernel.pmanager:startproc(args[1].pid,table.unpack(argsfix))
   end
 end
 
@@ -138,6 +145,7 @@ end
 
 function Kernel.kmain(...)
   local args = {...}
+  Kernel.pmanager:init_loop()
   Kernel.execprogram("/INIT.lua")
   --Kernel.pmanager:addproc(pm.Process:new(nil, 1, Kernel.pmanager,function() dofile(Kernel.fixPath("INIT.lua")) end))
 end 

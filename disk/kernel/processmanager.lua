@@ -109,6 +109,11 @@ function ProcessManager:addproc(proc)
   self.processes[proc.pid]=proc
 end
 
+function ProcessManager:addproctoqueue(proc,...)
+  if self.processes[proc.pid]~=nil then return end
+  table.insert(self.processRunQueue,{proc=proc,args=...})
+end
+
 function ProcessManager:startproc(pid,...)
   if self.processes[pid]==nil then return end
   self.processes[pid]:Start(...)
@@ -117,6 +122,21 @@ end
 function ProcessManager:killproc(pid)
   if self.processes[pid]==nil then return end
   self.processes[pid]=nil
+end
+
+function ProcessManager:init_loop() 
+  coroutine.resume(coroutine.create(function() 
+    while true do 
+      sleep(0.5)
+      --see if there are any processes on queue
+      if #self.processRunQueue>0 then
+        self:addproc(self.processRunQueue[0]["proc"])
+        self:startproc(self.processRunQueue[0]["proc"].pid,self.processRunQueue[0]["args"])
+        --run 'em and then remove 'em, easy peasy
+        table.remove(self.processRunQueue,0)
+      end
+    end
+  end))
 end
 
 return {ProcessManager=ProcessManager,Process=Process}
