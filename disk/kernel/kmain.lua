@@ -14,11 +14,12 @@ end
 Kernel.process = pm.Process:new(nil,0,Kernel.pmanager,function () end) --Kernel's pseudo-process
 Kernel.pmanager:addproc(Kernel.process)
 
-local blacklistedfuncs = {"getmetatable","setmetatable","rawget","rawequal","rawset","setfenv","collectgarbage","getfenv","load"}
+local blacklistedfuncs = {"getmetatable","setmetatable","rawget","rawequal","rawset","setfenv","collectgarbage","getfenv","load","module","package","newproxy"}
 
 Kernel.environment = setmetatable(
 {
     _G = {},
+    _VERSION = _VERSION,
     --based on lua 5.1's coroutine lib since CC:tweaked and perhaps even the original computercraft runs lua 5.1
     coroutine = {create = coroutine.create, 
     yield = coroutine.yield, resume = coroutine.resume,
@@ -67,11 +68,28 @@ Kernel.environment = setmetatable(
     loadfile = function(path) return loadfile(_G.Kernel.fixPath(path)) end,
     
     proc = nil,
+    pcall = pcall,
+    xpcall = xpcall,
+    next = next,
+    pairs = pairs,
+    ipairs = ipairs,
+    select = select,
+    tonumber = tonumber,
+    tostring = tostring,
+
 
     exit = function() Kernel.syscall(proc,0) end,
     sleep = sleep, 
-    term = term, 
-
+    term = term,
+    print = print,
+    clear = term.clear,
+    write = write,
+    read = read,
+    _HOST = _HOST,
+    _CC_DEFAULT_SETTINGS = _CC_DEFAULT_SETTINGS,
+    colors = colors,
+    colours = colours,
+    textutils = textutils,
 },{
     __index = function(t,k)
         if rawget(t,k) ~= nil and blacklistedfuncs[k] == nil then

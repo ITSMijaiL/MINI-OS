@@ -1,4 +1,5 @@
 term.clear()
+term.setCursorPos(1,1)
 print("MINI-OS installer")
 print("[V0.0.1]")
 
