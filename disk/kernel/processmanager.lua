@@ -15,11 +15,6 @@ function CStatusToPStatus(CStatus)
   if CStatus == "running" then return 1 end
 end
 
-function Wait(seconds)
-  local start = os.time()
-  repeat until os.time() > start + seconds
-end
-
 
 function Process:new(o,pid,pmanager,job)
     o = o or {}
@@ -36,7 +31,10 @@ function Process:new(o,pid,pmanager,job)
     return o
 end
 
+function Process:UpdateStatus() self.pstatus = CStatusToPStatus(coroutine.status(self.job)) end
+
 function Process:GetStatus()
+  self:UpdateStatus()
   return self.pstatus
 end
 
@@ -58,13 +56,10 @@ end
 function Process:SetName(name) self.name = name end
 function Process:GetName() return self.name end
 
-function Process:UpdateStatus() self.pstatus = CStatusToPStatus(coroutine.status(self.job)) end
 
 function Process:Start(...)
-  assert(not (self.pstatus ~= 0) and not (self.pstatus~=2),"Process status must be 0 or 2.")
-  self:UpdateStatus()
+  assert(self:GetStatus()==0 or self:GetStatus()==2,"Process status must be 0 or 2.")
   coroutine.resume(self.job,...)
-  self:UpdateStatus()
 end
 
 function Process:Kill()
