@@ -44,7 +44,7 @@ if string.lower(yn)=="yes" or string.lower(yn)=="y" then
 
     write("DONE\n")
     print("Downloading files...")
-    local files = {"startup.lua","kernel/kmain.lua","kernel/processmanager.lua","rootfs/etc/on_init/minishell.lua","rootfs/lib/fs.lua","rootfs/lib/standard.lua"}
+    local files = {"startup.lua","kernel/kmain.lua","kernel/processmanager.lua","rootfs/etc/on_init/minishell.lua","rootfs/lib/fs.lua","rootfs/lib/io.lua","rootfs/lib/standard.lua"}
     local downPath = "https://raw.githubusercontent.com/ITSMijaiL/MINI-OS/main/disk/"
     local localPath = "/disk/"
     print("LEGEND:\nFILENAME DOWNLOAD_STATUS\nWhere C is correct and X means that there was an error while downloading the file")
@@ -62,5 +62,15 @@ if string.lower(yn)=="yes" or string.lower(yn)=="y" then
         f:close()
         r.close()
     end
+    print("Do you want to reboot now?")
+    write("Y/N:")
+    local yn = io.read()
 
+    while string.lower(yn)~="y" and string.lower(yn)~="n" and string.lower(yn)~="no" and string.lower(yn)~="yes" do
+        write("Y/N:")
+        yn = io.read()
+    end
+    if string.lower(yn)=="yes" or string.lower(yn)=="y" then 
+        os.reboot()
+    end
 end
