@@ -1,6 +1,4 @@
-local function minishell(...)
+return function(...)
       print("test :)")
       exit()
 end
-
-return minishell
