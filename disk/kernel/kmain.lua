@@ -69,7 +69,8 @@ Kernel.environment = setmetatable(
     proc = nil,
 
     exit = function() Kernel.syscall(proc,0) end,
-    sleep = sleep
+    sleep = sleep, 
+    term = term, 
 
 },{
     __index = function(t,k)
@@ -84,7 +85,7 @@ Kernel.environment = setmetatable(
 })
 
 Kernel.fixPath = function (path)
-    if path == nil or path=="" then return "" end
+    if path == nil or path=="" then return "/disk/rootfs" end
     return fs.combine("/disk/rootfs",path)
 end
 
@@ -140,7 +141,7 @@ for i,v in pairs(Kernel.environment) do
     env_copy[i] = v
 end
 setfenv(func,env_copy)
-Kernel.syscall(Kernel.process,7,proc,#Kernel.pmanager:getprocs(),func) --create process, store it in variable proc
+Kernel.syscall(Kernel.process,7,proc,#Kernel.pmanager:getprocs(),function(...) return pcall(func,...) end) --create process, store it in variable proc
 Kernel.syscall(Kernel.process,8,proc,...) --start the process
 end
 
