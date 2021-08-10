@@ -1,4 +1,4 @@
-clear()
+term.clear()
 print("MINI-OS installer")
 print("[V0.0.1]")
 
