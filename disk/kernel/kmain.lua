@@ -3,7 +3,7 @@
 _G.Kernel={}
 local Kernel = _G.Kernel
 --require = require("cc.require")
-local pm = dofile("processmanager.lua")
+local pm = dofile("./processmanager.lua")
 
 Kernel.pmanager = pm.ProcessManager:new()
 
