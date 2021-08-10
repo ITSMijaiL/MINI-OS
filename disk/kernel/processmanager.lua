@@ -25,9 +25,10 @@ function Process:new(o,pid,pmanager,job)
     self.pmanager=pmanager
     self.pstatus = 0
     self.name = nil
-    if type(job())=="function" then
+    local err,out = pcall(function()
       self.job = coroutine.create(job())
-    else
+    end)
+    if not err then 
       self.job = coroutine.create(job)
     end
     self.locals = {}
