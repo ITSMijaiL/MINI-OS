@@ -141,7 +141,7 @@ for i,v in pairs(Kernel.environment) do
     env_copy[i] = v
 end
 setfenv(func,env_copy)
-Kernel.syscall(Kernel.process,7,proc,#Kernel.pmanager:getprocs(),function(...) return pcall(func,...) end) --create process, store it in variable proc
+Kernel.syscall(Kernel.process,7,proc,#Kernel.pmanager:getprocs(),func) --create process, store it in variable proc
 Kernel.syscall(Kernel.process,8,proc,...) --start the process
 end
 
