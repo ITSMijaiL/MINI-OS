@@ -49,7 +49,7 @@ if string.lower(yn)=="yes" or string.lower(yn)=="y" then
 
     write("DONE\n")
     print("Downloading files...")
-    local files = {"startup.lua","kernel/kmain.lua","kernel/processmanager.lua","rootfs/etc/on_init/minishell.lua","rootfs/lib/fs.lua","rootfs/lib/io.lua","rootfs/lib/standard.lua","rootfs/INIT.lua"}
+    local files = {"startup.lua","kernel/kmain.lua","kernel/processmanager.lua","rootfs/etc/on_init/minishell.lua","rootfs/lib/fs.lua","rootfs/lib/io.lua","rootfs/INIT.lua"}
     local downPath = "https://raw.githubusercontent.com/ITSMijaiL/MINI-OS/main/disk/"
     local localPath = "/disk/"
     print("LEGEND:\nFILENAME DOWNLOAD_STATUS\nWhere C is correct and X means that there was an error while downloading the file")
@@ -57,10 +57,10 @@ if string.lower(yn)=="yes" or string.lower(yn)=="y" then
         local r = http.get(downPath..v)
         write("["..tostring(i).."/"..tostring(#files).."] "..v)
         local f = io.open(localPath..v,"w")
-        local buff = r.readAll()
-        if r==nil or buff=="" then 
+        if r==nil then 
             write(" [X]\n")
         else
+            local buff = r.readAll()
             f:write(buff)
             write(" [C]\n")
         end
