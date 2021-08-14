@@ -12,7 +12,7 @@ Kernel.shutdown = function()
 end
 
 Kernel.process = pm.Process:new(nil,1,Kernel.pmanager,function () end) --Kernel's pseudo-process
-Kernel.pmanager:addproc(Kernel.process)
+Kernel.pmanager:addprocraw(Kernel.process)
 
 local blacklistedfuncs = {"getmetatable","setmetatable","rawget","rawequal","rawset","setfenv","collectgarbage","getfenv","load","module","package","newproxy"}
 

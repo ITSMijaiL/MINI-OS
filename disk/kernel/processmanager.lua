@@ -169,6 +169,10 @@ function ProcessManager:init_loop()
   end))
 end
 ]]
+function ProcessManager:addprocraw(proc)
+  if self.processes[proc:GetPID()]~=nil then return end
+  table.insert(self.processes,proc)
+end
 
 function ProcessManager:init_loop() --a.k.a. task scheduler
   repeat
