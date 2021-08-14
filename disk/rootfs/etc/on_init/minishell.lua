@@ -1,4 +1,2 @@
-return function()
-      print("test :)")
-      exit()
-end
+print("test :)")
+exit()

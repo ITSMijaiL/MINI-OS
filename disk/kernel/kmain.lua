@@ -60,7 +60,7 @@ Kernel.environment = setmetatable(
 
     syscall = Kernel.syscall,
     
-    execprogram = Kernel.execprogram,
+    execprogram = function(path,...) Kernel.execprogram(path,...) end,
 
     parallel = parallel,
 
@@ -162,6 +162,7 @@ local env_copy = {}
 for i,v in pairs(Kernel.environment) do
     env_copy[i] = v
 end
+env_copy.args = {...}
 setfenv(func,env_copy)
 proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,func,...) --create process, store it in variable proc
 Kernel.syscall(Kernel.process,8,proc) --add process to queue
