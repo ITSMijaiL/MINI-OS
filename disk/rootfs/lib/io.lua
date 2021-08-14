@@ -32,8 +32,8 @@ function io.lines(file,...)
     return oldio.lines(_G.Kernel.fixPath(file),...)
 end
 
-function io.read(file) 
-    return oldio.read(_G.Kernel.fixPath(file))
+function io.read(...)
+    return oldio.read(...)
 end
 
 function io.type(handle) return oldio.type(handle) end
