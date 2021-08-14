@@ -11,7 +11,7 @@ Kernel.shutdown = function()
   end
 end
 
-Kernel.process = pm.Process:new(nil,0,Kernel.pmanager,function () end) --Kernel's pseudo-process
+Kernel.process = pm.Process:new(nil,1,Kernel.pmanager,function () end) --Kernel's pseudo-process
 Kernel.pmanager:addproc(Kernel.process)
 
 local blacklistedfuncs = {"getmetatable","setmetatable","rawget","rawequal","rawset","setfenv","collectgarbage","getfenv","load","module","package","newproxy"}
@@ -135,17 +135,21 @@ Kernel.syscall = function(proc,number,...)
       CheckArgs(2)
       return args[1].write(args[2])
   elseif number==5 then --SHUTDOWN []
+    --Kernel.pmanager:shutdown() --TODO
       os.shutdown()
   elseif number==6 then --REBOOT []
       os.reboot()
-  elseif number==7 then --CREATE PROCESS [variable used to store the process' class,PID (int),job (function)]
+  elseif number==7 then --CREATE PROCESS [variable used to store the process' class,PID (int),job (function), arguments (array)]
       CheckArgs(2)
-      return pm.Process:new(nil,args[1],Kernel.pmanager,args[2])
-  elseif number==8 then --INIT PROCESS [process var, args]
-    local argsfix = {}
-    for i,v in pairs(args) do if i~=1 then table.insert(argsfix,v) end end
-    Kernel.pmanager:addproc(args[1])
-    Kernel.pmanager:startproc(args[1].pid,table.unpack(argsfix))
+      local argsfix = {}
+      if #args>2 then 
+        for i,v in pairs(args) do if i>2 then table.insert(argsfix,v) end end
+      end
+      if #argsfix==0 then argsfix=nil end 
+      return pm.Process:new(nil,args[1],Kernel.pmanager,args[2],argsfix)
+  elseif number==8 then --QUEUE PROCESS [process var]
+    CheckArgsStrict(1)
+    Kernel.pmanager:addproctoqueue(args[1])
   end
 end
 
@@ -159,8 +163,8 @@ for i,v in pairs(Kernel.environment) do
     env_copy[i] = v
 end
 setfenv(func,env_copy)
-proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs(),func) --create process, store it in variable proc
-Kernel.syscall(Kernel.process,8,proc,...) --start the process
+proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,func,...) --create process, store it in variable proc
+Kernel.syscall(Kernel.process,8,proc) --add process to queue
 end
 
 function Kernel.kmain(...)

@@ -3,7 +3,7 @@ term.clear()
 term.setCursorPos(1,1)
 --TODO: init all processes listed in /etc/on_init
 for i,v in pairs(fs.list("/etc/on_init")) do
-    write("\nINITIATING "..v.." -> ")
+    write("\nADDDING "..v.." TO QUEUE -> ")
     execprogram("/etc/on_init/"..v)
     write("DONE\n")
 end
