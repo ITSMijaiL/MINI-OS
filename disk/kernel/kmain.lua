@@ -170,8 +170,7 @@ end
 
 function Kernel.kmain(...)
   local args = {...}
-  --Kernel.pmanager:init_loop()
-  Kernel.pmanager:init_loop()
   Kernel.execprogram("/INIT.lua")
+  Kernel.pmanager:init_loop()
   --Kernel.pmanager:addproc(pm.Process:new(nil, 1, Kernel.pmanager,function() dofile(Kernel.fixPath("INIT.lua")) end))
 end 
