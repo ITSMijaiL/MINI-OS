@@ -36,6 +36,7 @@ function Process:new(o,pid,pmanager,job,args)
     self.pid = pid
     self.pmanager=pmanager
     self.pstatus = 0
+    self.onforeground=false
     self.name = nil
     self.args = args or {}
     local err,out = pcall(function()
@@ -45,6 +46,8 @@ function Process:new(o,pid,pmanager,job,args)
       self.job = coroutine.create(job)
     end
     self.locals = {}
+    self.STDOUT = ""
+    --self.STDIN = "" --not necessary since io.stdin isn't really a file... Nor io.stdout, but stdout is needed because of terminal output
     self.children = {}
     return o
 end
@@ -56,15 +59,52 @@ function Process:GetStatus()
   return self.pstatus
 end
 
+function Process:IsOnForeground() return self.onforeground end
+
+function Process:BringToForeground() self.onforeground=true end
+function Process:SendToBackground() self.onforeground=false end
+
+function Process:write(...)
+  local cleantable = {}
+  for i,v in {...} do
+    cleantable[i]=tostring(v)
+  end
+  self.STDOUT = self.STDOUT..table.unpack(cleantable)
+  if self.onforeground then print(...) end
+end
+
+function Process:sleep(secs)
+  if self.onforeground then sleep(secs) 
+  else return false end
+end
+
+function Process:pullEvent(filter) 
+  if self.onforeground then 
+    return os.pullEvent(filter)
+  else return false end
+end
+
+function Process:pullEventRaw(filter) 
+  if self.onforeground then 
+    return os.pullEventRaw(filter)
+  else return false end
+end
+
+function Process:read(...)
+  if not self.onforeground then return end
+  local r = io.read(...)
+  return r
+end
+
+function Process:clear() self.STDOUT="" end
+
 function Process:GetPID() return self.pid end
 
 function Process:GetJob() return self.job end 
 
 function Process:GetArgs() return self.args end
 
-function Process:SetArgs(args) 
-self.args = args
-end
+function Process:SetArgs(args) self.args = args end
 
 function Process:GetChildrenProcesses() return self.children end 
 
@@ -102,6 +142,7 @@ end
 
 function Process:Stop()
   if self:GetStatus()==1 or self:GetStatus()==0 then
+    self.pstatus=2
     coroutine.yield(self.job)
   end
 end
@@ -114,6 +155,7 @@ function ProcessManager:new(o)
     self.__index = self
     self.processes={}
     self.processRunQueue={}
+    self.processOnForeground = nil
     return o
 end
 
@@ -172,6 +214,23 @@ end
 function ProcessManager:addprocraw(proc)
   if self.processes[proc:GetPID()]~=nil then return end
   table.insert(self.processes,proc)
+end
+
+function ProcessManager:bringprocesstoforeground(pid)
+  if self.processes[pid]==nil then return end
+  if self.processOnForeground ~= nil then
+    self.processOnForeground:SendToBackground()
+  end
+  self.processes[pid]:BringToForeground()
+  self.processOnForeground=self.processes[pid]
+end
+
+function ProcessManager:killall()
+  self.processOnForeground:SendToBackground()
+  self.processOnForeground=nil
+  for i,v in pairs(self.processes) do
+    v:ForceKill()
+  end
 end
 
 function ProcessManager:init_loop() --a.k.a. task scheduler

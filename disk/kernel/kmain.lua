@@ -54,11 +54,13 @@ Kernel.environment = setmetatable(
 
     io = dofile("/disk/rootfs/lib/io.lua"),
 
+    settings = dofile("/disk/rootfs/lib/settings.lua"),
+
     os = os,
 
     debug = nil,
 
-    syscall = Kernel.syscall,
+    --syscall = Kernel.syscall,
     
     execprogram = function(path,...) Kernel.execprogram(path,...) end,
 
@@ -79,12 +81,10 @@ Kernel.environment = setmetatable(
 
 
     exit = function() Kernel.syscall(proc,0) end,
-    sleep = sleep, 
     term = term,
     print = print,
-    clear = term.clear,
-    write = write,
-    read = read,
+    write = self.write,
+    read = self.read,
     _HOST = _HOST,
     _CC_DEFAULT_SETTINGS = _CC_DEFAULT_SETTINGS,
     colors = colors,
@@ -135,9 +135,10 @@ Kernel.syscall = function(proc,number,...)
       CheckArgs(2)
       return args[1].write(args[2])
   elseif number==5 then --SHUTDOWN []
-    --Kernel.pmanager:shutdown() --TODO
+      Kernel.pmanager:killall()
       os.shutdown()
   elseif number==6 then --REBOOT []
+      Kernel.pmanager:killall()
       os.reboot()
   elseif number==7 then --CREATE PROCESS [variable used to store the process' class,PID (int),job (function), arguments (array)]
       CheckArgs(2)
@@ -150,6 +151,9 @@ Kernel.syscall = function(proc,number,...)
   elseif number==8 then --QUEUE PROCESS [process var]
     CheckArgsStrict(1)
     Kernel.pmanager:addproctoqueue(args[1])
+  elseif number==9 then --BRING PROCESS TO FOREGROUND [PID (int)]
+    CheckArgsStrict(1)
+    Kernel.pmanager:bringprocesstoforeground(args[1])
   end
 end
 
@@ -162,10 +166,28 @@ local env_copy = {}
 for i,v in pairs(Kernel.environment) do
     env_copy[i] = v
 end
-env_copy.args = {...}
 setfenv(func,env_copy)
-proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,func,...) --create process, store it in variable proc
-Kernel.syscall(Kernel.process,8,proc) --add process to queue
+--create process, store it in variable proc
+proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,func,...) 
+
+--do final tweaks
+env_copy.self = proc
+env_copy.io.read = env_copy.self.read
+env_copy.io.write = env_copy.self.write
+env_copy.args = {...}
+env_copy.os.shutdown = function() Kernel.syscall(proc,5) end
+env_copy.os.reboot = function() Kernel.syscall(proc,6) end
+env_copy.settings:ApplyFromFile("/etc/config")
+env_copy.syscall = function(number,...) Kernel.syscall(proc,number,...) end
+env_copy.term.write = env_copy.io.write
+env_copy.term.clear = env_copy.self.clear
+env_copy.clear = env_copy.term.clear
+env_copy.sleep = env_copy.self.sleep
+env_copy.os.pullEvent = env_copy.self.pullEvent
+env_copy.os.pullEventRaw = env_copy.self.pullEventRaw
+
+--add process to queue
+Kernel.syscall(Kernel.process,8,proc) 
 end
 
 function Kernel.kmain(...)

@@ -52,7 +52,7 @@ if string.lower(yn)=="yes" or string.lower(yn)=="y" then
     local files = {"startup.lua","kernel/kmain.lua","kernel/processmanager.lua","rootfs/etc/on_init/minishell.lua","rootfs/lib/fs.lua","rootfs/lib/io.lua","rootfs/INIT.lua"}
     local downPath = "https://raw.githubusercontent.com/ITSMijaiL/MINI-OS/main/disk/"
     local localPath = "/disk/"
-    print("LEGEND:\nFILENAME DOWNLOAD_STATUS\nWhere C is correct and X means that there was an error while downloading the file")
+    print("LEYEND:\nFILENAME DOWNLOAD_STATUS\nWhere C is correct and X means that there was an error while downloading the file")
     for i,v in pairs(files) do
         local r = http.get(downPath..v)
         write("["..tostring(i).."/"..tostring(#files).."] "..v)
