@@ -79,17 +79,20 @@ Kernel.environment = setmetatable(
     tonumber = tonumber,
     tostring = tostring,
 
-
-    exit = function() Kernel.syscall(proc,0) end,
     term = term,
     print = print,
     write = self.write,
     read = self.read,
+    error = self.error,
     _HOST = _HOST,
     _CC_DEFAULT_SETTINGS = _CC_DEFAULT_SETTINGS,
     colors = colors,
     colours = colours,
     textutils = textutils,
+
+    --syscalls funcs
+    exit = function() Kernel.syscall(proc,0) end,
+
 },{
     __index = function(t,k)
         if rawget(t,k) ~= nil and blacklistedfuncs[k] == nil then
@@ -121,16 +124,16 @@ Kernel.syscall = function(proc,number,...)
       CheckArgs(0)
       proc:kill()
   elseif number==1 then --OPEN [file path, mode]
-      CheckArgs(2)
+      CheckArgs(1)
       local filepath = args[1]
-      local mode = args[2]
-      return io.open(filepath,mode)
+      local mode = args[2] or "rb"
+      return io.open(Kernel.fixPath(filepath),mode)
   elseif number==2 then --CLOSE [handle]
       CheckArgsStrict(1)
-      args[1].close()
+      args[1]:close()
   elseif number==3 then --READ [handle]
-      CheckArgs(1)
-      return args[1]:read("*a")
+      CheckArgs(2)
+      return args[1]:read(args[2])
   elseif number==4 then --WRITE [handle, string]
       CheckArgs(2)
       return args[1].write(args[2])
@@ -172,19 +175,26 @@ proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,func,...)
 
 --do final tweaks
 env_copy.self = proc
-env_copy.io.read = env_copy.self.read
-env_copy.io.write = env_copy.self.write
 env_copy.args = {...}
-env_copy.os.shutdown = function() Kernel.syscall(proc,5) end
-env_copy.os.reboot = function() Kernel.syscall(proc,6) end
+
 env_copy.settings:ApplyFromFile("/etc/config")
 env_copy.syscall = function(number,...) Kernel.syscall(proc,number,...) end
+
 env_copy.term.write = env_copy.io.write
 env_copy.term.clear = env_copy.self.clear
 env_copy.clear = env_copy.term.clear
 env_copy.sleep = env_copy.self.sleep
+
 env_copy.os.pullEvent = env_copy.self.pullEvent
 env_copy.os.pullEventRaw = env_copy.self.pullEventRaw
+env_copy.os.shutdown = function() Kernel.syscall(proc,5) end
+env_copy.os.reboot = function() Kernel.syscall(proc,6) end
+
+env_copy.io.read = env_copy.self.read
+env_copy.io.write = env_copy.self.write
+
+env_copy.io.open = function(filename,mode) return Kernel.syscall(proc,1,filename,mode) end
+env_copy.io.close = function(handle) Kernel.syscall(proc,2,handle) end
 
 --add process to queue
 Kernel.syscall(Kernel.process,8,proc) 

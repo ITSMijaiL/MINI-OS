@@ -47,6 +47,7 @@ function Process:new(o,pid,pmanager,job,args)
     end
     self.locals = {}
     self.STDOUT = ""
+    self.STDERR = ""
     --self.STDIN = "" --not necessary since io.stdin isn't really a file... Nor io.stdout, but stdout is needed because of terminal output
     self.children = {}
     return o
@@ -96,7 +97,16 @@ function Process:read(...)
   return r
 end
 
-function Process:clear() self.STDOUT="" end
+function Process:error(...)
+  local cleantable = {}
+  for i,v in {...} do
+    cleantable[i]=tostring(v)
+  end
+  self.STDERR = self.STDERR..table.unpack(cleantable)
+  if self.onforeground then printError(...) end
+end
+
+function Process:clear() self.STDOUT="";term.clear(); end
 
 function Process:GetPID() return self.pid end
 
