@@ -2,14 +2,9 @@ _G.Kernel={}
 local Kernel = _G.Kernel
 --require = require("cc.require")
 local pm = dofile("/disk/kernel/processmanager.lua")
+local utils = dofile("/disk/kernel/utils.lua")
 
 Kernel.pmanager = pm.ProcessManager:new()
-
-Kernel.shutdown = function()
-  for i,v in pairs(Kernel.pmanager:getprocs()) do
-    v:Kill()
-  end
-end
 
 Kernel.process = pm.Process:new(nil,1,Kernel.pmanager,function () end,{},0) --Kernel's pseudo-process
 Kernel.pmanager:addprocraw(Kernel.process)
@@ -210,7 +205,7 @@ env_copy.io.close = function(handle) Kernel.syscall(proc,2,handle) end
 env_copy.exit = function() Kernel.syscall(proc,0) end
 
 --add process to queue
-Kernel.syscall(Kernel.process,8,proc) 
+Kernel.syscall(Kernel.process,8,proc)
 end
 
 function Kernel.kmain(...)
@@ -218,4 +213,4 @@ function Kernel.kmain(...)
   Kernel.execprogram(0,"/INIT.lua")
   Kernel.pmanager:init_loop()
   --Kernel.pmanager:addproc(pm.Process:new(nil, 1, Kernel.pmanager,function() dofile(Kernel.fixPath("INIT.lua")) end))
-end 
+end

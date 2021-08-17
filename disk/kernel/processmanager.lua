@@ -13,6 +13,8 @@ there must be a special function that does that everytime a program finishes if 
 
 local Process={pid=0,pmanager=nil}
 
+local utils = dofile("/disk/kernel/utils.lua")
+
 --[[
 Process statuses:
 -1:Error
@@ -21,14 +23,17 @@ Process statuses:
 2:Finished/Dead
 ]]
 
---[[Permission levels:
+--[[
+Permission levels:
 0: Super process        (Most privileged, mostly system processes)
 1: Privileged process   (On the middle, processes executed as superuser or important daemons)
 2: User process         (Least privileged, normal user programs like the shell)
 ]]
 
---[[Extra notes:
-Daemons in mini-os are just processes that arent in the foreground
+--[[
+Extra notes:
+* Daemons in mini-os are just processes that arent in the foreground, as simple as that, no need to create a different class or object for it
+* Permission levels CAN'T be set after the process was created
 ]]
 
 function CStatusToPStatus(CStatus)
@@ -59,10 +64,9 @@ function Process:new(o,pid,pmanager,job,args,permlevel)
 
     self.permlevel = permlevel
 
-    self.STDOUT = ""
-    self.STDERR = ""
-    --self.STDIN = "" --not necessary since io.stdin isn't really a file... Nor io.stdout, but stdout is needed because of terminal output
-    
+    self.STDOUT = utils:make_file({write = self.write})
+    self.STDERR = utils:make_file({write = self.error})
+    self.STDIN = utils:make_file({readLine = self.read, readAll = self.read, read = self.read})
 
     self.locals = {}
     self.children = {}

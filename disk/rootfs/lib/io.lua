@@ -4,7 +4,7 @@ local io = {}
 
 assert(_G.Kernel~=nil,"[LIB ERROR] Kernel's object is non-existent!")
 
-io.stdin,io.stdout,io.stderr = oldio.stdin,oldio.stdout,oldio.stderr
+--io.stdin,io.stdout,io.stderr = oldio.stdin,oldio.stdout,oldio.stderr
 
 --function io.close(handle) return oldio.close(handle) end
 
