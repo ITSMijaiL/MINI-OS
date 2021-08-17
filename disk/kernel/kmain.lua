@@ -11,7 +11,7 @@ Kernel.shutdown = function()
   end
 end
 
-Kernel.process = pm.Process:new(nil,1,Kernel.pmanager,function () end) --Kernel's pseudo-process
+Kernel.process = pm.Process:new(nil,1,Kernel.pmanager,function () end,{},0) --Kernel's pseudo-process
 Kernel.pmanager:addprocraw(Kernel.process)
 
 local blacklistedfuncs = {"getmetatable","setmetatable","rawget","rawequal","rawset","setfenv","collectgarbage","getfenv","load","module","package","newproxy"}
@@ -62,7 +62,7 @@ Kernel.environment = setmetatable(
 
     --syscall = Kernel.syscall,
     
-    execprogram = function(path,...) Kernel.execprogram(path,...) end,
+    execprogram = function(path,...) Kernel.execprogram(2,path,...) end,
 
     parallel = parallel,
 
@@ -90,16 +90,13 @@ Kernel.environment = setmetatable(
     colours = colours,
     textutils = textutils,
 
-    --syscalls funcs
-    exit = function() Kernel.syscall(proc,0) end,
-
 },{
     __index = function(t,k)
         if rawget(t,k) ~= nil and blacklistedfuncs[k] == nil then
             return rawget(t,k) --rawget to not loop over __index and fill the c stack
         elseif not rawget(t,k) ~= nil and blacklistedfuncs[k] == nil then
             return _G[k]
-        elseif blacklistedfuncs[k] ~= nil then 
+        elseif blacklistedfuncs[k] ~= nil then
             return nil
         end
     end
@@ -122,7 +119,7 @@ Kernel.syscall = function(proc,number,...)
   end
   if number==0 then --EXIT []
       CheckArgs(0)
-      proc:kill()
+      proc:Kill()
   elseif number==1 then --OPEN [file path, mode]
       CheckArgs(1)
       local filepath = args[1]
@@ -157,11 +154,18 @@ Kernel.syscall = function(proc,number,...)
   elseif number==9 then --BRING PROCESS TO FOREGROUND [PID (int)]
     CheckArgsStrict(1)
     Kernel.pmanager:bringprocesstoforeground(args[1])
+  elseif number==10 then --SEND PROCESS TO BACKGROUND [PID (int)]
+    CheckArgsStrict(1)
+    Kernel.pmanager:sendprocesstobackground(args[1])
+  elseif number==11 then --SEND SIGNAL TO PROCESS
+    CheckArgsStrict(2)
+    return Kernel.pmanager:sendsignal(args[1],args[2])
   end
 end
 
-function Kernel.execprogram(path,...) 
+function Kernel.execprogram(permslevel,path,...) 
 --local args = {...}
+local pl = permslevel or 2
 local proc;
 local func,out = loadfile(Kernel.fixPath(path))
 if not func then return out end
@@ -175,6 +179,14 @@ proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,func,...)
 
 --do final tweaks
 env_copy.self = proc
+env_copy.self.SendToBackground = nil
+env_copy.self.BringToForeground = nil
+env_copy.self.HandleSignal = nil
+env_copy.self.Kill = nil
+env_copy.self.ForceKill = nil
+env_copy.self.Stop = nil
+
+
 env_copy.args = {...}
 
 env_copy.settings:ApplyFromFile("/etc/config")
@@ -195,6 +207,7 @@ env_copy.io.write = env_copy.self.write
 
 env_copy.io.open = function(filename,mode) return Kernel.syscall(proc,1,filename,mode) end
 env_copy.io.close = function(handle) Kernel.syscall(proc,2,handle) end
+env_copy.exit = function() Kernel.syscall(proc,0) end
 
 --add process to queue
 Kernel.syscall(Kernel.process,8,proc) 
@@ -202,7 +215,7 @@ end
 
 function Kernel.kmain(...)
   local args = {...}
-  Kernel.execprogram("/INIT.lua")
+  Kernel.execprogram(0,"/INIT.lua")
   Kernel.pmanager:init_loop()
   --Kernel.pmanager:addproc(pm.Process:new(nil, 1, Kernel.pmanager,function() dofile(Kernel.fixPath("INIT.lua")) end))
 end 

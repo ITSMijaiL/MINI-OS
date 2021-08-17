@@ -21,6 +21,16 @@ Process statuses:
 2:Finished/Dead
 ]]
 
+--[[Permission levels:
+0: Super process        (Most privileged, mostly system processes)
+1: Privileged process   (On the middle, processes executed as superuser or important daemons)
+2: User process         (Least privileged, normal user programs like the shell)
+]]
+
+--[[Extra notes:
+Daemons in mini-os are just processes that arent in the foreground
+]]
+
 function CStatusToPStatus(CStatus)
   if CStatus == "dead" then return 2 end
   if CStatus == "suspended" or CStatus == "normal" then return 0 end
@@ -28,7 +38,7 @@ function CStatusToPStatus(CStatus)
 end
 
 
-function Process:new(o,pid,pmanager,job,args)
+function Process:new(o,pid,pmanager,job,args,permlevel)
     o = o or {}
     local obj
     setmetatable(o,self)
@@ -39,25 +49,70 @@ function Process:new(o,pid,pmanager,job,args)
     self.onforeground=false
     self.name = nil
     self.args = args or {}
+
     local err,out = pcall(function()
       self.job = coroutine.create(job())
     end)
     if not err then 
       self.job = coroutine.create(job)
     end
-    self.locals = {}
+
+    self.permlevel = permlevel
+
     self.STDOUT = ""
     self.STDERR = ""
     --self.STDIN = "" --not necessary since io.stdin isn't really a file... Nor io.stdout, but stdout is needed because of terminal output
+    
+
+    self.locals = {}
     self.children = {}
+    self.signalstable = {
+      SIGKILL=function()
+        self:Kill()
+      end,
+      SIGBG=function()
+        self.pmanager:sendprocesstobackground(self.pid)
+      end,
+      SIGFG=function()
+        self.pmanager:bringprocesstoforeground(self.pid)
+      end
+    }
     return o
 end
+
+function Process:GetPermLevel() return self.permlevel end
 
 function Process:UpdateStatus() self.pstatus = CStatusToPStatus(coroutine.status(self.job)) end
 
 function Process:GetStatus()
   self:UpdateStatus()
   return self.pstatus
+end
+
+function Process:HandleSignal(proccaller,sig)
+  if proccaller:GetPermLevel()>self:GetPermLevel() then return end --we dont want an user process killing a system process, do we?
+  if sig==nil then return end
+  if self.signalstable[sig]==nil then
+    self:error("Signal "..sig.." doesn't exists",0)
+    return end
+  self.signalstable[sig]()
+end
+
+function Process:SetSignal(sig,func)
+  if sig==nil or func==nil then return end
+  if self.signalstable[sig]==nil then
+    self:error("Signal "..sig.." doesn't exists",0)
+    return end
+  if type(func) ~= "function" then 
+    self:error("Arg #2 is required to be a function.",0)
+    return end
+  self.signalstable[sig]=func
+end
+
+function Process:ClearSignalsTable()
+  for i,v in pairs(self.signalstable) do
+    self.signalstable[i]=nil
+  end
 end
 
 function Process:IsOnForeground() return self.onforeground end
@@ -76,19 +131,19 @@ end
 
 function Process:sleep(secs)
   if self.onforeground then sleep(secs) 
-  else return false end
+  else return end
 end
 
 function Process:pullEvent(filter) 
   if self.onforeground then 
     return os.pullEvent(filter)
-  else return false end
+  else return end
 end
 
 function Process:pullEventRaw(filter) 
   if self.onforeground then 
     return os.pullEventRaw(filter)
-  else return false end
+  else return end
 end
 
 function Process:read(...)
@@ -142,6 +197,7 @@ end
 
 function Process:Kill()
     if self:GetStatus()~=2 and self:GetStatus()~=0 then return end
+    self:Stop()
     self.pmanager:delproc(self.pid)
 end
 
@@ -165,7 +221,7 @@ function ProcessManager:new(o)
     self.__index = self
     self.processes={}
     self.processRunQueue={}
-    self.processOnForeground = nil
+    self.processesOnForeground = {}
     return o
 end
 
@@ -178,7 +234,13 @@ function ProcessManager:getproc(pid)
   return self.processes[pid]
 end
 
+function ProcessManager:sendsignal(pid,sig)
+  if self.processes[pid]==nil then return end
+  return self.processes[pid]:HandleSignal(sig)
+end
+
 function ProcessManager:getprocs() return self.processes end
+function ProcessManager:getprocs_foreground() return self.processesOnForeground end
 
 --deprecated, it wont work with the loop
 --[[
@@ -201,6 +263,7 @@ end]]
 
 function ProcessManager:delproc(pid)
   if self.processes[pid]==nil then return end
+  if self.processesOnForeground[pid]~=nil then self.processesOnForeground[pid]=nil end 
   self.processes[pid]=nil
 end
 
@@ -228,16 +291,22 @@ end
 
 function ProcessManager:bringprocesstoforeground(pid)
   if self.processes[pid]==nil then return end
-  if self.processOnForeground ~= nil then
-    self.processOnForeground:SendToBackground()
-  end
+  if self.processesOnForeground[pid]~=nil then return end
   self.processes[pid]:BringToForeground()
-  self.processOnForeground=self.processes[pid]
+  table.insert(self.processesOnForeground,pid) -- we want only the pid since we dont want to clone the process
+end
+
+function ProcessManager:sendprocesstobackground(pid)
+  if self.processes[pid]==nil then return end
+  if self.processesOnForeground[pid]==nil then return end
+  self.processesOnForeground[pid]=nil
+  self.processes[pid]:SendToBackground()
 end
 
 function ProcessManager:killall()
-  self.processOnForeground:SendToBackground()
-  self.processOnForeground=nil
+  for i,v in pairs(self.processesOnForeground) do 
+    self.processes[v]:ForceKill()
+  end
   for i,v in pairs(self.processes) do
     v:ForceKill()
   end
