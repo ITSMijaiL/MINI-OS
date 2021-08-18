@@ -1,7 +1,7 @@
 term.clear()
 term.setCursorPos(1,1)
 print("MINI-OS installer")
-print("[V0.0.1]")
+print("[V0.1.3]")
 
 print("Are you sure that you want to install this **UNSTABLE** system?")
 write("Y/N:")
@@ -28,8 +28,6 @@ if string.lower(yn)=="yes" or string.lower(yn)=="y" then
     fs.makeDir(rfs.."/dev")
 
     fs.makeDir(rfs.."/etc")
-    rfs2=rfs.."/etc"
-    fs.makeDir(rfs2.."/on_init")
 
     fs.makeDir(rfs.."/home")
     fs.makeDir(rfs.."/lib")
@@ -49,8 +47,8 @@ if string.lower(yn)=="yes" or string.lower(yn)=="y" then
 
     write("DONE\n")
     print("Downloading files...")
-    local files = {"startup.lua","kernel/kmain.lua","kernel/processmanager.lua","rootfs/etc/on_init/minishell.lua","rootfs/lib/fs.lua","rootfs/lib/io.lua","rootfs/INIT.lua"}
-    local downPath = "https://raw.githubusercontent.com/ITSMijaiL/MINI-OS/main/disk/"
+    local files = {"startup.lua","kernel/kmain.lua","kernel/processmanager.lua","kernel/utils.lua","rootfs/bin/minishell.lua","rootfs/lib/fs.lua","rootfs/lib/io.lua","rootfs/lib/settings.lua","rootfs/INIT.lua","rootfs/bin/another_process.lua","rootfs/etc/config","rootfs/etc/default_config"}
+    local downPath = "https://raw.githubusercontent.com/ITSMijaiL/MINI-OS/experimental/disk/"
     local localPath = "/disk/"
     print("LEYEND:\nFILENAME DOWNLOAD_STATUS\nWhere C is correct and X means that there was an error while downloading the file")
     for i,v in pairs(files) do
