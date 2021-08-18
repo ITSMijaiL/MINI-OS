@@ -76,9 +76,6 @@ Kernel.environment = setmetatable(
 
     term = term,
     print = print,
-    write = self.write,
-    read = self.read,
-    error = self.error,
     _HOST = _HOST,
     _CC_DEFAULT_SETTINGS = _CC_DEFAULT_SETTINGS,
     colors = colors,
@@ -181,6 +178,9 @@ env_copy.self.Kill = nil
 env_copy.self.ForceKill = nil
 env_copy.self.Stop = nil
 
+env_copy.write = env_copy.self.write
+env_copy.error = env_copy.self.error
+env_copy.read = env_copy.self.read
 
 env_copy.args = {...}
 
