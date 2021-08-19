@@ -317,6 +317,8 @@ function ProcessManager:killall()
 end
 
 function ProcessManager:init_loop() --a.k.a. task scheduler
+  local cache_out = {}
+  local eventData = {n=0}
   repeat
     sleep(1)
     if #self.processRunQueue>0 then
@@ -325,15 +327,24 @@ function ProcessManager:init_loop() --a.k.a. task scheduler
     end
 
     for i,v in pairs(self.processes) do
-      local ok, out = coroutine.resume(v:GetJob(),table.unpack(v:GetArgs()))
-      if not ok then
-        printError("PROCESS #"..tostring(v:GetPID()).." HAD AN ERROR:\n")
-        printError(out) -- cant concatenate em in an assert call otherwhise it will error whenever out is nil even if the function was executed well
-      end
-      if v:GetStatus()==2 then
-        self.processes[i]=nil
+      if cache_out[v]==nil or cache_out[v]==eventData[1] or eventData[1] == "terminate" then
+        local ok,out;
+        if #v:GetArgs()>0 then
+          ok, out = coroutine.resume(v:GetJob(),table.unpack(v:GetArgs()))
+        else
+          ok,out = coroutine.resume(v:GetJob(),table.unpack(eventData, 1, eventData.n))
+        end
+        if not ok then
+          printError("PROCESS #"..tostring(v:GetPID()).." HAD AN ERROR:\n")
+          printError(out) -- cant concatenate em in an assert call otherwhise it will error whenever out is nil even if the function was executed well
+        end
+        cache_out[v]=out
+        if v:GetStatus()==2 then
+          self.processes[i]=nil
+        end
       end
     end
+    eventData = table.pack(os.pullEventRaw())
   until #self.processes==0
 end
 
