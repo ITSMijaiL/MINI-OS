@@ -187,9 +187,6 @@ env_copy.args = {...}
 env_copy.settings:ApplyFromFile("/etc/config")
 env_copy.syscall = function(number,...) Kernel.syscall(proc,number,...) end
 
-env_copy.clear = env_copy.term.clear
-env_copy.sleep = env_copy.self.sleep
-
 env_copy.os.pullEvent = env_copy.self.pullEvent
 env_copy.os.pullEventRaw = env_copy.self.pullEventRaw
 env_copy.os.shutdown = function() Kernel.syscall(proc,5) end
@@ -208,6 +205,9 @@ for i,v in pairs(term) do
 end
 env_copy.term.write = env_copy.io.write
 env_copy.term.clear = env_copy.self.clear
+
+env_copy.clear = env_copy.term.clear
+env_copy.sleep = env_copy.self.sleep
 
 --add process to queue
 Kernel.syscall(Kernel.process,8,proc)
