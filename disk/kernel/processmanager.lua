@@ -320,8 +320,8 @@ function ProcessManager:init_loop() --a.k.a. task scheduler
   repeat
     sleep(1)
     if #self.processRunQueue>0 then
-      table.insert(self.processes,self.processRunQueue[0])
-      table.remove(self.processRunQueue,0)
+      table.insert(self.processes,self.processRunQueue[1])
+      table.remove(self.processRunQueue,1)
     end
 
     for i,v in pairs(self.processes) do
