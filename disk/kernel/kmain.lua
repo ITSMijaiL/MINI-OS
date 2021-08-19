@@ -74,7 +74,7 @@ Kernel.environment = setmetatable(
     tonumber = tonumber,
     tostring = tostring,
 
-    term = term,
+    --term = term,
     print = print,
     _HOST = _HOST,
     _CC_DEFAULT_SETTINGS = _CC_DEFAULT_SETTINGS,
@@ -187,8 +187,6 @@ env_copy.args = {...}
 env_copy.settings:ApplyFromFile("/etc/config")
 env_copy.syscall = function(number,...) Kernel.syscall(proc,number,...) end
 
-env_copy.term.write = env_copy.io.write
-env_copy.term.clear = env_copy.self.clear
 env_copy.clear = env_copy.term.clear
 env_copy.sleep = env_copy.self.sleep
 
@@ -203,6 +201,13 @@ env_copy.io.write = env_copy.self.write
 env_copy.io.open = function(filename,mode) return Kernel.syscall(proc,1,filename,mode) end
 env_copy.io.close = function(handle) Kernel.syscall(proc,2,handle) end
 env_copy.exit = function() Kernel.syscall(proc,0) end
+
+env_copy.term = {}
+for i,v in pairs(term) do
+    env_copy.term[i]=v
+end
+env_copy.term.write = env_copy.io.write
+env_copy.term.clear = env_copy.self.clear
 
 --add process to queue
 Kernel.syscall(Kernel.process,8,proc)
