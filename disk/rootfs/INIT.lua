@@ -23,7 +23,7 @@ end
 
 local processesToStart = splitstr(settings:GetValue("ONINIT"),",")
 
-for pfilepath in processesToStart do
+for _,pfilepath in pairs(processesToStart) do
     execprogram(pfilepath)
 end
 
