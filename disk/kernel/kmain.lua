@@ -110,7 +110,6 @@ Kernel.syscall = function(proc,number,...)
       assert(#args==argsAmnt,"System call #"..tostring(number).." needs exactly "..tostring(argsAmnt).." arguments!")
   end
   if number==0 then --EXIT []
-      CheckArgs(0)
       proc:Kill()
   elseif number==1 then --OPEN [file path, mode]
       CheckArgs(1)
