@@ -168,7 +168,7 @@ function Process:error(...)
   if self.onforeground then printError(...) end
 end
 
-function Process:clear() self.STDOUT="";term.clear(); end
+function Process:clear() term.clear(); end
 
 function Process:GetPID() return self.pid end
 
