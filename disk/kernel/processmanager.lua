@@ -54,13 +54,15 @@ function Process:new(o,pid,pmanager,job,args,permlevel)
     self.onforeground=false
     self.name = nil
     self.args = args or {}
-
-    local err,out = pcall(function()
-      self.job = coroutine.create(job())
-    end)
-    if not err then 
-      self.job = coroutine.create(job)
+    if job~=nil then
+      local err,out = pcall(function()
+        self.job = coroutine.create(job())
+      end)
+      if not err then 
+        self.job = coroutine.create(job)
+      end
     end
+    
 
     self.permlevel = permlevel
 
@@ -170,6 +172,8 @@ function Process:clear() self.STDOUT="";term.clear(); end
 function Process:GetPID() return self.pid end
 
 function Process:GetJob() return self.job end 
+
+function Process:SetJob(job) if type(job)~="function" then return end self.job = coroutine.create(job) end
 
 function Process:GetArgs() return self.args end
 

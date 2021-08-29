@@ -165,9 +165,8 @@ local env_copy = {}
 for i,v in pairs(Kernel.environment) do
     env_copy[i] = v
 end
-setfenv(func,env_copy)
 --create process, store it in variable proc
-proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,func,...) 
+proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,nil,...) 
 
 --do final tweaks
 env_copy.self = proc
@@ -213,6 +212,9 @@ env_copy.term.clear = env_copy.self.clear
 
 env_copy.clear = env_copy.term.clear
 env_copy.sleep = env_copy.self.sleep
+
+setfenv(func,env_copy)
+proc:SetJob(func)
 
 --add process to queue
 Kernel.syscall(Kernel.process,8,proc)
