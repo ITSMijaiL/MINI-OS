@@ -51,7 +51,7 @@ Kernel.environment = setmetatable(
 
     settings = dofile("/disk/rootfs/lib/settings.lua"),
 
-    os = os,
+    os = {},
 
     debug = nil,
 
@@ -187,10 +187,15 @@ env_copy.args = {...}
 env_copy.settings:ApplyFromFile("/etc/config")
 env_copy.syscall = function(number,...) Kernel.syscall(proc,number,...) end
 
+for i,v in pairs(os) do
+    env_copy.os[i]=v
+end
+
 env_copy.os.pullEvent = env_copy.self.pullEvent
 env_copy.os.pullEventRaw = env_copy.self.pullEventRaw
 env_copy.os.shutdown = function() Kernel.syscall(proc,5) end
 env_copy.os.reboot = function() Kernel.syscall(proc,6) end
+env_copy.os.sleep = env_copy.self.sleep
 
 env_copy.io.read = env_copy.self.read
 env_copy.io.write = env_copy.self.write
