@@ -45,6 +45,7 @@ end
 
 function Process:new(o,pid,pmanager,job,args,permlevel)
     o = o or {}
+    permlevel=permlevel or 2
     local obj
     setmetatable(o,self)
     self.__index = self
@@ -54,7 +55,7 @@ function Process:new(o,pid,pmanager,job,args,permlevel)
     self.onforeground=false
     self.name = nil
     self.args = args or {}
-    if job~=nil then
+    if job~=0 then
       local err,out = pcall(function()
         self.job = coroutine.create(job())
       end)

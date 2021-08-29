@@ -166,7 +166,7 @@ for i,v in pairs(Kernel.environment) do
     env_copy[i] = v
 end
 --create process, store it in variable proc
-proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,nil,...) 
+proc = Kernel.syscall(Kernel.process,7,#Kernel.pmanager:getprocs()+1,0,...,pl) 
 
 --do final tweaks
 env_copy.self = proc
