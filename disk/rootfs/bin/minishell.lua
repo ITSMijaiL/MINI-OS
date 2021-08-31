@@ -1,4 +1,3 @@
-syscall(9,self:GetPID())
 term.clear()
 term.setCursorPos(1,1)
 while true do

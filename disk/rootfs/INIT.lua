@@ -24,7 +24,10 @@ end
 local processesToStart = splitstr(settings:GetValue("ONINIT"),",")
 
 for _,pfilepath in pairs(processesToStart) do
-    execprogram(pfilepath)
+    print("INITIATING PROCESSESS...")
+    local pfix = splitstr(pfilepath,":")
+    local pid = execprogram(pfix[1])
+    if pfix[2]=="1" then
+        syscall(9,pid)
+    end
 end
-
-exit()

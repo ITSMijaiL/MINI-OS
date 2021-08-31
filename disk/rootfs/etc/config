@@ -1,2 +1,2 @@
 SHELL=/bin/minishell.lua
-ONINIT=/bin/minishell.lua,/bin/another_process.lua
+ONINIT=/bin/minishell.lua:1,/bin/another_process.lua:0
