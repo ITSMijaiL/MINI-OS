@@ -141,17 +141,17 @@ Kernel.syscall = function(proc,number,...)
       return pm.Process:new(nil,args[1],Kernel.pmanager,args[2],argsfix)
   elseif number==8 then --QUEUE PROCESS [process var]
     CheckArgsStrict(1)
-    if proc:GetPermLevel()<Kernel.pmanager:getproc(args[1]) or proc:GetPermLevel()==0 or proc:GetPID()==args[1] then 
+    if proc:GetPermLevel()==0 then 
         Kernel.pmanager:addproctoqueue(args[1])
     end
   elseif number==9 then --BRING PROCESS TO FOREGROUND [PID (int)]
     CheckArgsStrict(1)
-    if proc:GetPermLevel()<Kernel.pmanager:getproc(args[1]) or proc:GetPermLevel()==0 or proc:GetPID()==args[1] then 
+    if proc:GetPermLevel()<Kernel.pmanager:getproc(args[1]):GetPermLevel() or proc:GetPermLevel()==0 or proc:GetPID()==tonumber(args[1]) then 
         Kernel.pmanager:bringprocesstoforeground(args[1])
     end
   elseif number==10 then --SEND PROCESS TO BACKGROUND [PID (int)]
     CheckArgsStrict(1)
-    if proc:GetPermLevel()<Kernel.pmanager:getproc(args[1]) or proc:GetPermLevel()==0 or proc:GetPID()==args[1] then 
+    if proc:GetPermLevel()<Kernel.pmanager:getproc(args[1]):GetPermLevel() or proc:GetPermLevel()==0 or proc:GetPID()==tonumber(args[1]) then 
         Kernel.pmanager:sendprocesstobackground(args[1])
     end
   elseif number==11 then --SEND SIGNAL TO PROCESS
